@@ -1,0 +1,31 @@
+# Bloom dev-server via Docker Compose.
+#
+# Usage:
+#   REACT_NATIVE_PACKAGER_HOSTNAME=<your-machine-LAN-IP> docker compose up
+#
+# Then open the Bloom dev-client build on your device/emulator; it connects to
+# Metro at http://<your-machine-LAN-IP>:8081.
+#
+# Why the LAN IP: a phone can't reach "localhost" inside the container. Set
+# REACT_NATIVE_PACKAGER_HOSTNAME to the host machine's LAN address (e.g.
+# 192.168.1.x) so the bundle URL the app receives is reachable.
+services:
+  bloom:
+    build: .
+    # host networking is simplest on Linux (device reaches Metro directly).
+    # On macOS/Windows, comment this out and rely on the published port below.
+    network_mode: host
+    ports:
+      - "8081:8081"
+    environment:
+      # Falls back to 0.0.0.0 if you don't export it; set your LAN IP for
+      # real-device testing.
+      - REACT_NATIVE_PACKAGER_HOSTNAME=${REACT_NATIVE_PACKAGER_HOSTNAME:-0.0.0.0}
+      - EXPO_NO_TELEMETRY=1
+    volumes:
+      # Live-reload your source into the container.
+      - ./:/app
+      # Keep the container's own node_modules (don't clobber with host's).
+      - /app/node_modules
+    stdin_open: true
+    tty: true

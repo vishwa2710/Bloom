@@ -31,7 +31,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "color": "#4C8C4A"
+        }
+      ]
     ]
   }
 }

@@ -4,11 +4,28 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { initDatabase } from '@/db/client';
+import {
+  configureNotificationHandler,
+  ensureNotificationPermissions,
+  syncReminders,
+} from '@/features/notifications/notifications';
+import { getPreferences } from '@/features/settings/preferences';
 import { colors } from '@/theme';
+
+configureNotificationHandler();
 
 export default function RootLayout() {
   useEffect(() => {
     initDatabase();
+    (async () => {
+      // Prompt for permission on first launch only if reminders are enabled,
+      // then schedule from current state.
+      const prefs = await getPreferences();
+      if (prefs.remindersEnabled) {
+        await ensureNotificationPermissions();
+      }
+      await syncReminders();
+    })();
   }, []);
 
   return (

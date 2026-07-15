@@ -50,6 +50,16 @@ export const pageEvents = sqliteTable('page_events', {
   dwellSeconds: real('dwell_seconds').notNull().$default(() => 0),
 });
 
+/** Single-row user preferences (id is always 1). */
+export const preferences = sqliteTable('preferences', {
+  id: integer('id').primaryKey(),
+  remindersEnabled: integer('reminders_enabled', { mode: 'boolean' })
+    .notNull()
+    .$default(() => true),
+  reminderHour: integer('reminder_hour').notNull().$default(() => 20),
+});
+
 export type DocumentRow = typeof documents.$inferSelect;
 export type SessionRow = typeof sessions.$inferSelect;
 export type PageEventRow = typeof pageEvents.$inferSelect;
+export type PreferencesRow = typeof preferences.$inferSelect;

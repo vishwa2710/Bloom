@@ -8,6 +8,7 @@ import { Screen } from '@/components/Screen';
 import { StatTile } from '@/components/StatTile';
 import { getReadingSummary, type ReadingSummary } from '@/db/repo';
 import { computeGardenState } from '@/features/garden/garden';
+import { syncReminders } from '@/features/notifications/notifications';
 import { formatDuration } from '@/lib/time';
 import { colors, spacing } from '@/theme';
 
@@ -18,6 +19,9 @@ export default function GardenScreen() {
 
   const load = useCallback(async () => {
     setSummary(await getReadingSummary());
+    // Keep reminders in sync with the latest reading state (e.g. after a
+    // session bumps the streak / resets the wither warning).
+    void syncReminders();
   }, []);
 
   // Re-load whenever the tab regains focus (e.g. after finishing a session).

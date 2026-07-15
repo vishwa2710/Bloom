@@ -59,6 +59,13 @@ export function initDatabase(): void {
     CREATE INDEX IF NOT EXISTS idx_sessions_document ON sessions(document_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_started ON sessions(started_at);
     CREATE INDEX IF NOT EXISTS idx_page_events_session ON page_events(session_id);
+
+    CREATE TABLE IF NOT EXISTS preferences (
+      id INTEGER PRIMARY KEY NOT NULL DEFAULT 1,
+      reminders_enabled INTEGER NOT NULL DEFAULT 1,
+      reminder_hour INTEGER NOT NULL DEFAULT 20
+    );
+    INSERT OR IGNORE INTO preferences (id) VALUES (1);
   `);
 
   initialized = true;

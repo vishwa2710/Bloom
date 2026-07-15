@@ -21,10 +21,14 @@ grows and withers based on your activity.
 - **⏱ Honest session tracking** — active reading time only. The clock pauses
   when the app is backgrounded or left idle on a page, so metrics reflect real
   reading. Per-page dwell time is recorded for each page you visit.
-- **🌸 The Garden** — a home screen whose growth stage is derived from your
-  cumulative sessions and streak, and which withers after a few inactive days.
+- **🌸 The Garden** — a home screen with an **illustrated, animated** plant
+  (SVG) whose growth stage is derived from your cumulative sessions and streak.
+  It sways gently, pops when it advances a stage, and wilts after a few inactive
+  days.
 - **📊 History** — every completed session with duration, pages, and average
   time-per-page.
+- **🔔 Reminders** — local daily reading reminders and a "your garden is about
+  to wither" warning, configurable in **Settings** (no account/network needed).
 
 Everything is stored **locally** in SQLite — no account, no network required.
 
@@ -106,22 +110,25 @@ app/                      # Expo Router routes
 │  ├─ _layout.tsx         # Garden / Library / History tabs
 │  ├─ index.tsx           # 🌸 Garden home
 │  ├─ library.tsx         # 📚 documents + import
-│  └─ history.tsx         # 📊 session history
+│  ├─ history.tsx         # 📊 session history
+│  └─ settings.tsx        # 🔔 reminder toggle + time
 └─ reader/[id].tsx        # 📖 PDF reader + session HUD
 
 src/
 ├─ config.ts              # garden & session tuning knobs (one place)
 ├─ theme.ts               # colors / spacing / radius
 ├─ db/
-│  ├─ schema.ts           # Drizzle schema: documents, sessions, page_events
+│  ├─ schema.ts           # Drizzle schema: documents, sessions, page_events, preferences
 │  ├─ client.ts           # SQLite open + table bootstrap
 │  └─ repo.ts             # queries + reading summary + streak logic
 ├─ features/
 │  ├─ reading/
 │  │  ├─ useSessionTracker.ts  # active-time + per-page dwell tracking
 │  │  └─ import.ts             # PDF picker + persistent copy
-│  └─ garden/garden.ts    # growth-stage + wither computation (pure)
-├─ components/            # Screen, Button, StatTile, Garden
+│  ├─ garden/garden.ts         # growth-stage + wither computation (pure)
+│  ├─ notifications/notifications.ts  # local reminders + wither warning
+│  └─ settings/preferences.ts  # persisted user preferences
+├─ components/            # Screen, Button, StatTile, Garden, GardenPlant (SVG)
 └─ lib/                   # id + time helpers
 ```
 
@@ -140,8 +147,8 @@ All the behavioural knobs live in [`src/config.ts`](src/config.ts):
 
 | Phase | Scope                                                                 |
 | ----- | --------------------------------------------------------------------- |
-| **1** ✅ | PDF reading, session metrics, garden bloom/wither, history (this repo) |
-| **2**   | Illustrated / animated garden stages; notifications & streak reminders |
+| **1** ✅ | PDF reading, session metrics, garden bloom/wither, history            |
+| **2** ✅ | Illustrated / animated garden stages; local notifications & streak reminders |
 | **3**   | **App-locking** — see below                                            |
 | **4**   | EPUB + article (reader-mode) import; cloud accounts & sync             |
 

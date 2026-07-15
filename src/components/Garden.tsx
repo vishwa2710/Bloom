@@ -1,29 +1,82 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
 import { type GardenState, stageLabel } from '@/features/garden/garden';
 import { colors, radius, spacing } from '@/theme';
 
+import { GardenPlant } from './GardenPlant';
+
 /**
- * Placeholder garden visual for the prototype: a staged emoji on a coloured
- * disc. This is intentionally simple art — the growth *logic* is what we're
- * proving here. Phase 2+ swaps this for illustrated / Skia-animated stages.
+ * The garden home visual: an illustrated plant that grows with the effective
+ * stage, sways gently while idle, fades in on mount, and "pops" when the plant
+ * advances a stage.
+ *
+ * Animations use React Native's built-in Animated API (no extra native deps /
+ * babel config). A future pass could move to Reanimated or Skia for richer
+ * motion.
  */
-const HEALTHY_STAGES = ['🌱', '🌿', '🌷', '🌸', '🌳'] as const;
-const WITHER_GLYPH = '🥀';
-
 export function Garden({ state }: { state: GardenState }) {
-  const glyph = state.isWithering
-    ? WITHER_GLYPH
-    : HEALTHY_STAGES[Math.min(state.effectiveStage, HEALTHY_STAGES.length - 1)];
+  const sway = useRef(new Animated.Value(0)).current;
+  const pop = useRef(new Animated.Value(1)).current;
+  const fade = useRef(new Animated.Value(0)).current;
+  const prevStage = useRef<number | null>(null);
 
-  const discColor = state.isWithering ? '#EFE1D2' : colors.surfaceAlt;
+  // Entrance fade + continuous gentle sway.
+  useEffect(() => {
+    Animated.timing(fade, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(sway, {
+          toValue: 1,
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(sway, {
+          toValue: 0,
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [fade, sway]);
+
+  // Celebratory pop when the plant advances a stage (not on first render).
+  useEffect(() => {
+    const current = state.effectiveStage;
+    if (prevStage.current != null && current > prevStage.current) {
+      Animated.sequence([
+        Animated.spring(pop, { toValue: 1.18, friction: 3, useNativeDriver: true }),
+        Animated.spring(pop, { toValue: 1, friction: 4, useNativeDriver: true }),
+      ]).start();
+    }
+    prevStage.current = current;
+  }, [state.effectiveStage, pop]);
+
+  const rotate = sway.interpolate({
+    inputRange: [0, 1],
+    outputRange: state.isWithering ? ['-1deg', '1deg'] : ['-2.5deg', '2.5deg'],
+  });
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.disc, { backgroundColor: discColor }]}>
-        <Text style={styles.glyph}>{glyph}</Text>
+      <View style={[styles.stage, state.isWithering && styles.stageWither]}>
+        <Animated.View
+          style={{ opacity: fade, transform: [{ rotate }, { scale: pop }] }}
+        >
+          <GardenPlant stage={state.effectiveStage} withered={state.isWithering} size={220} />
+        </Animated.View>
       </View>
-      <Text style={styles.stage}>{stageLabel(state.effectiveStage)}</Text>
+
+      <Text style={styles.stageLabel}>{stageLabel(state.effectiveStage)}</Text>
       <Text style={styles.caption}>{captionFor(state)}</Text>
     </View>
   );
@@ -55,17 +108,18 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.lg,
   },
-  disc: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
+  stage: {
+    width: 240,
+    height: 240,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.surfaceAlt,
   },
-  glyph: {
-    fontSize: 96,
+  stageWither: {
+    backgroundColor: '#EFE6D8',
   },
-  stage: {
+  stageLabel: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,

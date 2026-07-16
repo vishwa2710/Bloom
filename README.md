@@ -73,6 +73,9 @@ npm run ios            # expo run:ios   (macOS + Xcode only)
 `android/` and `ios/` folders) and installs the dev client on your
 device/emulator. After that, `npm start` just serves the JS.
 
+> 💡 A **Makefile** wraps these commands — run `make help` to see all targets
+> (`make android`, `make ios`, `make start`, `make typecheck`, `make clean`, …).
+
 ---
 
 ## Quickstart (Docker)
